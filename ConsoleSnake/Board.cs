@@ -192,7 +192,7 @@ namespace ConsoleSnake
                 try
                 {
                     _board[s[0], s[1]] = _snakeBody;
-                    Console.SetCursorPosition((s[1] + 1) * 2, s[0] + 1);
+                    Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(s[1]), ConsolePositionHelper.GetCorrectTop(s[0]));
                 }
                 catch(Exception ex)
                 {
