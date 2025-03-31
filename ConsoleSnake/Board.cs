@@ -95,23 +95,31 @@ namespace ConsoleSnake
             };
         }
 
-        private void MoveSnake()
+        private void MoveSnake(int[] newSnakeElement)
         {
-            var newSnakeElement = GetNewSnakeElement(_snakeMovementDirection);
-
             if (newSnakeElement[0] == _applePostion[0] && newSnakeElement[1] == _applePostion[1])
             {
                 _appleEaten = true;
             }
 
+            foreach (var s in _snake)
+            {
+                if (s[0] == newSnakeElement[0] && s[1] == newSnakeElement[1])
+                {
+                    Console.Clear();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("======GAME OVER======");
+                    Console.ResetColor();
+
+                    GameOver = true;
+
+                    return;
+                }
+            }
+
             _snake.Add(newSnakeElement);
             _board[_snake[0][0], _snake[0][1]] = _grass;
             if (!_appleEaten) _snake.RemoveAt(0);
-        }
-
-        public void Update()
-        {
-            MoveSnake();
 
             foreach (var s in _snake)
             {
@@ -119,7 +127,7 @@ namespace ConsoleSnake
                 {
                     _board[s[0], s[1]] = _snakeBody;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -130,6 +138,13 @@ namespace ConsoleSnake
                     GameOver = true;
                 }
             }
+        }
+
+        public void Update()
+        {
+            var newSnakeElement = GetNewSnakeElement(_snakeMovementDirection);
+
+            MoveSnake(newSnakeElement);
 
             if (_appleEaten)
             {
