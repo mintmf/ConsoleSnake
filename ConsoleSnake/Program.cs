@@ -1,6 +1,10 @@
 ﻿using ConsoleSnake;
 
+Console.CursorVisible = false;
+
 var board = new Board();
+
+board.PrintBoard();
 
 while (true)
 {
@@ -14,7 +18,5 @@ while (true)
     board.Update();
     if (board.GameOver) break;
 
-    board.Print();
-
-    await Task.Delay(150);
+    await Task.Delay(200);
 }

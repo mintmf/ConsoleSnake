@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace ConsoleSnake
         private readonly int _width;
         private List<int[]> snake;
         private SnakeMovementDirection snakeMovementDirection;
-        private int[] applePostion;
+        private int[] applePosition;
         private bool appleEaten = false;
         public bool GameOver { get; set; }
 
@@ -33,12 +34,42 @@ namespace ConsoleSnake
             GameOver = false;
             AddApple();
         }
+        
+        
+
+        private void PrintApple()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(applePosition[1]), ConsolePositionHelper.GetCorrectTop(applePosition[0]));
+            Console.Write(_apple);
+            Console.ResetColor();
+            Console.SetCursorPosition(0, 0);
+        }
 
         private void AddApple()
         {
             appleEaten = false;
-            applePostion = new[] { new Random().Next(14), new Random().Next(14) };
-            _board[applePostion[0], applePostion[1]] = _apple;
+            applePosition = GenerateApplePosition();
+
+            PrintApple();
+
+            _board[applePosition[0], applePosition[1]] = _apple;
+        }
+
+        private int[] GenerateApplePosition()
+        {
+            var randomX = new Random().Next(_width);
+            var randomY = new Random().Next(_length);
+
+            foreach (var s in snake)
+            {
+                if (s[0] == randomX && s[1] == randomY)
+                {
+                    return GenerateApplePosition();
+                }
+            }
+
+            return new[] {randomX, randomY };
         }
 
         private List<int[]> InitSnake()
@@ -96,56 +127,87 @@ namespace ConsoleSnake
             };
         }
 
-        private void MoveSnake()
+        private void UpdateSnake()
         {
             var newSnakeElement = GetNewSnakeElement(snakeMovementDirection);
 
-            if (newSnakeElement[0] == applePostion[0] && newSnakeElement[1] == applePostion[1])
+            if (newSnakeElement[0] == applePosition[0] && newSnakeElement[1] == applePosition[1])
             {
                 appleEaten = true;
             }
 
+            if (CheckForSelfEating(newSnakeElement))
+            {
+                return;
+            }
+
+            snake.Add(newSnakeElement);
+            _board[snake[0][0], snake[0][1]] = _grass;
+
+            int[] oldSnakeTail = snake[0];
+
+            if (appleEaten)
+            {
+                MoveSnake();
+            }
+            else
+            {
+                snake.RemoveAt(0);
+                MoveSnake(oldSnakeTail);
+            }
+        }
+
+        private bool CheckForSelfEating(int[] newSnakeElement)
+        {
             foreach (var s in snake)
             {
                 if (s[0] == newSnakeElement[0] && s[1] == newSnakeElement[1])
                 {
-                    Console.Clear();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("======GAME OVER======");
-                    Console.ResetColor();
+                    PrintGameOverScreen();
 
+                    GameOver = true;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void MoveSnake(int[]? oldSnakeTail = null)
+        {
+            if (oldSnakeTail != null)
+            {
+                Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(oldSnakeTail[1]), ConsolePositionHelper.GetCorrectTop(oldSnakeTail[0]));
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.Write(_grass);
+                Console.ResetColor();
+            }
+
+            foreach(var s in snake)
+            {
+                try
+                {
+                    _board[s[0], s[1]] = _snakeBody;
+                    Console.SetCursorPosition((s[1] + 1) * 2, s[0] + 1);
+                }
+                catch(Exception ex)
+                {
+                    PrintGameOverScreen();
                     GameOver = true;
 
                     return;
                 }
             }
 
-            snake.Add(newSnakeElement);
-            _board[snake[0][0], snake[0][1]] = _grass;
-            if (!appleEaten) snake.RemoveAt(0);
-
-            foreach (var s in snake)
-            {
-                try
-                {
-                    _board[s[0], s[1]] = _snakeBody;
-                }
-                catch (Exception ex)
-                {
-                    Console.Clear();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("======GAME OVER======");
-                    Console.WriteLine(ex.Message);
-                    Console.ResetColor();
-
-                    GameOver = true;
-                }
-            }
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(_snakeBody);
+            Console.ResetColor();
         }
 
         public void Update()
         {
-            MoveSnake();
+            UpdateSnake();
 
             if (appleEaten)
             {
@@ -153,12 +215,8 @@ namespace ConsoleSnake
             }
         }
 
-        public void Print()
+        public void PrintBoard()
         {
-            Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop);
-
-            Console.WriteLine("USE ARROWS TO CHANGE DIRECTION");
-
             PrintHorizontalBorder();
 
             for (int i = 0; i < _length; i++)
@@ -168,24 +226,6 @@ namespace ConsoleSnake
                 for (int j = 0; j < _width; j++)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
-
-                    if (i == applePostion[0] && j == applePostion[1])
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                    }
-                    else
-                    {
-                        foreach (var s in snake)
-                        {
-                            if (s[0] == i && s[1] == j)
-                            {
-                                Console.ForegroundColor = ConsoleColor.Yellow;
-
-                                break;
-                            }
-                        }
-                    }
-
                     Console.Write(_board[i, j] + " ");
                     Console.ResetColor();
                 }
@@ -195,6 +235,8 @@ namespace ConsoleSnake
             }
 
             PrintHorizontalBorder();
+
+            PrintApple();
         }
 
         private void PrintSideBorder()
@@ -214,6 +256,14 @@ namespace ConsoleSnake
             }
 
             Console.Write("\n");
+        }
+
+        private void PrintGameOverScreen()
+        {
+            Console.SetCursorPosition(0, _length + 3);
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("============GAME OVER===========");
+            Console.ResetColor();
         }
     }
 }
