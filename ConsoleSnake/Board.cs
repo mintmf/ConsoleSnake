@@ -8,15 +8,18 @@ namespace ConsoleSnake
 {
     public class Board
     {
-        private string[, ] _board;
-        private int _length;
-        private int _width;
+        private readonly string[, ] _board;
+        private readonly int _length;
+        private readonly int _width;
         private List<int[]> _snake;
         private SnakeMovementDirection _snakeMovementDirection;
         public bool GameOver { get; set; }
-        private string _empty = "_";
+        private string _grass = "_";
+        private readonly string _border = "X";
         private string _snakeBody = "#";
         private string _apple = "@";
+        private int[] _applePostion;
+        private bool _appleEaten = false;
 
         public Board(int length = 14, int width = 14)
         {
@@ -27,6 +30,14 @@ namespace ConsoleSnake
             _snake = InitSnake();
             _snakeMovementDirection = SnakeMovementDirection.Right;
             GameOver = false;
+            AddApple();
+        }
+
+        private void AddApple()
+        {
+            _appleEaten = false;
+            _applePostion = new[] { new Random().Next(14), new Random().Next(14) };
+            _board[_applePostion[0], _applePostion[1]] = _apple;
         }
 
         private List<int[]> InitSnake()
@@ -37,8 +48,6 @@ namespace ConsoleSnake
                 new[] { 0, 1 },
                 new[] { 0, 2 },
                 new[] { 0, 4 },
-                new[] { 0, 5 },
-                new[] { 0, 6 },
             };
 
             return snake;
@@ -50,7 +59,7 @@ namespace ConsoleSnake
             {
                 for (int j = 0; j < _width; j++)
                 {
-                    _board[i, j] = _empty;
+                    _board[i, j] = _grass;
                 }
             }
         }
@@ -86,11 +95,23 @@ namespace ConsoleSnake
             };
         }
 
+        private void MoveSnake()
+        {
+            var newSnakeElement = GetNewSnakeElement(_snakeMovementDirection);
+
+            if (newSnakeElement[0] == _applePostion[0] && newSnakeElement[1] == _applePostion[1])
+            {
+                _appleEaten = true;
+            }
+
+            _snake.Add(newSnakeElement);
+            _board[_snake[0][0], _snake[0][1]] = _grass;
+            if (!_appleEaten) _snake.RemoveAt(0);
+        }
+
         public void Update()
         {
-            _snake.Add(GetNewSnakeElement(_snakeMovementDirection));
-            _board[_snake[0][0], _snake[0][1]] = _empty;
-            _snake.RemoveAt(0);
+            MoveSnake();
 
             foreach (var s in _snake)
             {
@@ -109,6 +130,11 @@ namespace ConsoleSnake
                     GameOver = true;
                 }
             }
+
+            if (_appleEaten)
+            {
+                AddApple();
+            }
         }
 
         public void Print()
@@ -121,15 +147,41 @@ namespace ConsoleSnake
             Console.WriteLine("DON'T CROSS THE BORDER");
             Console.ResetColor();
 
+            PrintHorizontalBorder();
+
             for (int i = 0; i < _length; i++)
             {
-                Console.Write("\n");
+                PrintSideBorder();
 
                 for (int j = 0; j < _width; j++)
                 {
                     Console.Write(_board[i, j] + " ");
                 }
+
+                PrintSideBorder();
+                Console.Write("\n");
             }
+
+            PrintHorizontalBorder();
+        }
+
+        private void PrintSideBorder()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(_border + " ");
+            Console.ResetColor();
+        }
+
+        private void PrintHorizontalBorder()
+        {
+            for (int k = 0; k < _length + 2; k++)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write(_border + " ");
+                Console.ResetColor();
+            }
+
+            Console.Write("\n");
         }
     }
 }
