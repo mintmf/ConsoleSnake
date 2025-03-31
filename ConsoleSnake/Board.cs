@@ -21,6 +21,7 @@ namespace ConsoleSnake
         private SnakeMovementDirection snakeMovementDirection;
         private int[] applePosition;
         private bool appleEaten = false;
+        private readonly int _offset = 15;
         public bool GameOver { get; set; }
 
         public Board(int length = 10, int width = 10)
@@ -38,15 +39,6 @@ namespace ConsoleSnake
         private bool CheckForWin()
         {
             return snake.Count == _width * _length;
-        }
-
-        private void PrintApple()
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(applePosition[1]), ConsolePositionHelper.GetCorrectTop(applePosition[0]));
-            Console.Write(_apple);
-            Console.ResetColor();
-            Console.SetCursorPosition(0, 0);
         }
 
         private void AddApple()
@@ -181,7 +173,7 @@ namespace ConsoleSnake
         {
             if (oldSnakeTail != null)
             {
-                Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(oldSnakeTail[1]), ConsolePositionHelper.GetCorrectTop(oldSnakeTail[0]));
+                Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(oldSnakeTail[1], _offset), ConsolePositionHelper.GetCorrectTop(oldSnakeTail[0]));
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.Write(_grass);
                 Console.ResetColor();
@@ -192,7 +184,7 @@ namespace ConsoleSnake
                 try
                 {
                     _board[s[0], s[1]] = _snakeBody;
-                    Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(s[1]), ConsolePositionHelper.GetCorrectTop(s[0]));
+                    Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(s[1], _offset), ConsolePositionHelper.GetCorrectTop(s[0]));
                 }
                 catch(Exception ex)
                 {
@@ -226,27 +218,42 @@ namespace ConsoleSnake
 
         public void PrintBoard()
         {
+            Console.SetCursorPosition(_offset, 0);
             PrintHorizontalBorder();
 
             for (int i = 0; i < _width; i++)
             {
+                Console.SetCursorPosition(_offset, i + 1);
                 PrintSideBorder();
 
                 for (int j = 0; j < _length; j++)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    Console.SetCursorPosition(_offset + j * 2 + 2, i + 1);
                     Console.Write(_board[i, j] + " ");
                     Console.ResetColor();
                 }
 
+                Console.SetCursorPosition(_offset + _width + _offset, i + 1);
                 PrintSideBorder();
                 Console.Write("\n");
             }
 
+            Console.SetCursorPosition(_offset, 13 + 1);
             PrintHorizontalBorder();
 
             PrintApple();
         }
+
+        private void PrintApple()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.SetCursorPosition(ConsolePositionHelper.GetCorrectLeft(applePosition[1], _offset), ConsolePositionHelper.GetCorrectTop(applePosition[0]));
+            Console.Write(_apple);
+            Console.ResetColor();
+            Console.SetCursorPosition(_offset, 0);
+        }
+
 
         private void PrintSideBorder()
         {
@@ -271,16 +278,19 @@ namespace ConsoleSnake
         {
             if (CheckForWin())
             {
-                Console.SetCursorPosition(0, _width + 3);
+                Console.SetCursorPosition(_offset, _width + 3);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("=============YOU WON============");
                 Console.ResetColor();
             }
 
-            Console.SetCursorPosition(0, _width + 3);
+            Console.SetCursorPosition(_offset, _width + 3);
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("============GAME OVER===========");
             Console.ResetColor();
+
+            Console.SetCursorPosition(_offset, _width + 4);
+            Console.WriteLine("----------press any key----------");
         }
     }
 }

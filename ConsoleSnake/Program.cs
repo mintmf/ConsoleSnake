@@ -1,12 +1,11 @@
 ﻿using ConsoleSnake;
 
 Console.CursorVisible = false;
+Console.SetWindowSize(60, 20);
 
-var board = new Board(12, 12);
+var board = new Board(13, 13);
 
 board.PrintBoard();
-
-int k = 0;
 
 while (true)
 {
@@ -18,9 +17,16 @@ while (true)
     }
 
     board.Update();
-    if (board.GameOver) break;
 
-    await Task.Delay(190 - k);
+    if (board.GameOver)
+    {
+        Console.ReadKey();
+        // await Task.Delay(3000);
 
-    // k++;
+        Console.Clear();
+        board = new Board(13, 13);
+        board.PrintBoard();
+    }
+
+    await Task.Delay(190);
 }
