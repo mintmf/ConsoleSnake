@@ -2,9 +2,11 @@
 
 Console.CursorVisible = false;
 
-var board = new Board();
+var board = new Board(12, 12);
 
 board.PrintBoard();
+
+int k = 0;
 
 while (true)
 {
@@ -18,5 +20,7 @@ while (true)
     board.Update();
     if (board.GameOver) break;
 
-    await Task.Delay(200);
+    await Task.Delay(190 - k);
+
+    // k++;
 }

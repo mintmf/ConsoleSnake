@@ -10,7 +10,7 @@ namespace ConsoleSnake
     public class Board
     {
         private readonly string _grass = "W";
-        private readonly string _border = "X";
+        private readonly string _border = "x";
         private readonly string _snakeBody = "#";
         private readonly string _apple = "@";
 
@@ -23,19 +23,22 @@ namespace ConsoleSnake
         private bool appleEaten = false;
         public bool GameOver { get; set; }
 
-        public Board(int length = 14, int width = 14)
+        public Board(int length = 10, int width = 10)
         {
             _length = length;
             _width = width;
-            _board = new string[_length, _width];
+            _board = new string[_width, _length];
             InitBoard();
             snake = InitSnake();
             snakeMovementDirection = SnakeMovementDirection.Right;
             GameOver = false;
             AddApple();
         }
-        
-        
+
+        private bool CheckForWin()
+        {
+            return snake.Count == _width * _length;
+        }
 
         private void PrintApple()
         {
@@ -87,9 +90,9 @@ namespace ConsoleSnake
 
         private void InitBoard()
         {
-            for (int i = 0; i < _length; i++)
+            for (int i = 0; i < _width; i++)
             {
-                for (int j = 0; j < _width; j++)
+                for (int j = 0; j < _length; j++)
                 {
                     _board[i, j] = _grass;
                 }
@@ -209,6 +212,12 @@ namespace ConsoleSnake
         {
             UpdateSnake();
 
+            if (CheckForWin())
+            {
+                GameOver = true;
+                PrintGameOverScreen();
+            }
+
             if (appleEaten)
             {
                 AddApple();
@@ -219,11 +228,11 @@ namespace ConsoleSnake
         {
             PrintHorizontalBorder();
 
-            for (int i = 0; i < _length; i++)
+            for (int i = 0; i < _width; i++)
             {
                 PrintSideBorder();
 
-                for (int j = 0; j < _width; j++)
+                for (int j = 0; j < _length; j++)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
                     Console.Write(_board[i, j] + " ");
@@ -241,7 +250,7 @@ namespace ConsoleSnake
 
         private void PrintSideBorder()
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.DarkMagenta;
             Console.Write(_border + " ");
             Console.ResetColor();
         }
@@ -250,7 +259,7 @@ namespace ConsoleSnake
         {
             for (int k = 0; k < _length + 2; k++)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
                 Console.Write(_border + " ");
                 Console.ResetColor();
             }
@@ -260,7 +269,15 @@ namespace ConsoleSnake
 
         private void PrintGameOverScreen()
         {
-            Console.SetCursorPosition(0, _length + 3);
+            if (CheckForWin())
+            {
+                Console.SetCursorPosition(0, _width + 3);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("=============YOU WON============");
+                Console.ResetColor();
+            }
+
+            Console.SetCursorPosition(0, _width + 3);
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("============GAME OVER===========");
             Console.ResetColor();
