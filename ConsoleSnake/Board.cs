@@ -8,18 +8,19 @@ namespace ConsoleSnake
 {
     public class Board
     {
+        private readonly string _grass = "W";
+        private readonly string _border = "X";
+        private readonly string _snakeBody = "#";
+        private readonly string _apple = "@";
+
         private readonly string[, ] _board;
         private readonly int _length;
         private readonly int _width;
-        private List<int[]> _snake;
-        private SnakeMovementDirection _snakeMovementDirection;
+        private List<int[]> snake;
+        private SnakeMovementDirection snakeMovementDirection;
+        private int[] applePostion;
+        private bool appleEaten = false;
         public bool GameOver { get; set; }
-        private string _grass = "_";
-        private readonly string _border = "X";
-        private string _snakeBody = "#";
-        private string _apple = "@";
-        private int[] _applePostion;
-        private bool _appleEaten = false;
 
         public Board(int length = 14, int width = 14)
         {
@@ -27,17 +28,17 @@ namespace ConsoleSnake
             _width = width;
             _board = new string[_length, _width];
             InitBoard();
-            _snake = InitSnake();
-            _snakeMovementDirection = SnakeMovementDirection.Right;
+            snake = InitSnake();
+            snakeMovementDirection = SnakeMovementDirection.Right;
             GameOver = false;
             AddApple();
         }
 
         private void AddApple()
         {
-            _appleEaten = false;
-            _applePostion = new[] { new Random().Next(14), new Random().Next(14) };
-            _board[_applePostion[0], _applePostion[1]] = _apple;
+            appleEaten = false;
+            applePostion = new[] { new Random().Next(14), new Random().Next(14) };
+            _board[applePostion[0], applePostion[1]] = _apple;
         }
 
         private List<int[]> InitSnake()
@@ -68,22 +69,22 @@ namespace ConsoleSnake
         {
             return consoleKey switch
             {
-                ConsoleKey.DownArrow => _snakeMovementDirection = SnakeMovementDirection.Down,
-                ConsoleKey.UpArrow => _snakeMovementDirection = SnakeMovementDirection.Up,
-                ConsoleKey.LeftArrow => _snakeMovementDirection = SnakeMovementDirection.Left,
-                ConsoleKey.RightArrow => _snakeMovementDirection = SnakeMovementDirection.Right,
-                _ => _snakeMovementDirection,
+                ConsoleKey.DownArrow => snakeMovementDirection = SnakeMovementDirection.Down,
+                ConsoleKey.UpArrow => snakeMovementDirection = SnakeMovementDirection.Up,
+                ConsoleKey.LeftArrow => snakeMovementDirection = SnakeMovementDirection.Left,
+                ConsoleKey.RightArrow => snakeMovementDirection = SnakeMovementDirection.Right,
+                _ => snakeMovementDirection,
             };
         }
 
         public void UpdateSnakeMovementDirection(ConsoleKeyInfo consoleKeyInfo)
         {
-            _snakeMovementDirection = GetSnakeMovementDirection(consoleKeyInfo.Key);
+            snakeMovementDirection = GetSnakeMovementDirection(consoleKeyInfo.Key);
         }
 
         private int[] GetNewSnakeElement(SnakeMovementDirection snakeMovementDirection)
         {
-            var lastSnakeElement = new[] { _snake[_snake.Count - 1][0], _snake[_snake.Count - 1][1] };
+            var lastSnakeElement = new[] { snake[snake.Count - 1][0], snake[snake.Count - 1][1] };
 
             return snakeMovementDirection switch
             {
@@ -95,14 +96,16 @@ namespace ConsoleSnake
             };
         }
 
-        private void MoveSnake(int[] newSnakeElement)
+        private void MoveSnake()
         {
-            if (newSnakeElement[0] == _applePostion[0] && newSnakeElement[1] == _applePostion[1])
+            var newSnakeElement = GetNewSnakeElement(snakeMovementDirection);
+
+            if (newSnakeElement[0] == applePostion[0] && newSnakeElement[1] == applePostion[1])
             {
-                _appleEaten = true;
+                appleEaten = true;
             }
 
-            foreach (var s in _snake)
+            foreach (var s in snake)
             {
                 if (s[0] == newSnakeElement[0] && s[1] == newSnakeElement[1])
                 {
@@ -117,11 +120,11 @@ namespace ConsoleSnake
                 }
             }
 
-            _snake.Add(newSnakeElement);
-            _board[_snake[0][0], _snake[0][1]] = _grass;
-            if (!_appleEaten) _snake.RemoveAt(0);
+            snake.Add(newSnakeElement);
+            _board[snake[0][0], snake[0][1]] = _grass;
+            if (!appleEaten) snake.RemoveAt(0);
 
-            foreach (var s in _snake)
+            foreach (var s in snake)
             {
                 try
                 {
@@ -142,11 +145,9 @@ namespace ConsoleSnake
 
         public void Update()
         {
-            var newSnakeElement = GetNewSnakeElement(_snakeMovementDirection);
+            MoveSnake();
 
-            MoveSnake(newSnakeElement);
-
-            if (_appleEaten)
+            if (appleEaten)
             {
                 AddApple();
             }
@@ -158,10 +159,6 @@ namespace ConsoleSnake
 
             Console.WriteLine("USE ARROWS TO CHANGE DIRECTION");
 
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("DON'T CROSS THE BORDER");
-            Console.ResetColor();
-
             PrintHorizontalBorder();
 
             for (int i = 0; i < _length; i++)
@@ -170,7 +167,27 @@ namespace ConsoleSnake
 
                 for (int j = 0; j < _width; j++)
                 {
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+
+                    if (i == applePostion[0] && j == applePostion[1])
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                    }
+                    else
+                    {
+                        foreach (var s in snake)
+                        {
+                            if (s[0] == i && s[1] == j)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+
+                                break;
+                            }
+                        }
+                    }
+
                     Console.Write(_board[i, j] + " ");
+                    Console.ResetColor();
                 }
 
                 PrintSideBorder();
